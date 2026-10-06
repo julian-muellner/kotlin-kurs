@@ -22,28 +22,18 @@ package exercise
  * 3a - if/else cascade -> `when` as an expression.
  */
 fun level(utilisation: Int): String {
-    if (utilisation < 10) {
-        return "idle"
-    } else if (utilisation < 60) {
-        return "normal"
-    } else if (utilisation < 90) {
-        return "high"
-    } else {
-        return "critical"
+    return when {
+        utilisation < 10 -> "idle"
+        utilisation < 60 -> "normal"
+        utilisation < 90 -> "high"
+        else -> "critical"
     }
 }
 
 /**
  * 3b - StringBuilder -> string template.
  */
-fun format(name: String, port: Int): String {
-    val sb = StringBuilder()
-    sb.append(name)
-    sb.append(" (port ")
-    sb.append(port)
-    sb.append(")")
-    return sb.toString()
-}
+fun format(name: String, port: Int) = "$name (port $port)"
 
 /**
  * 3c - three overloads -> one function with default arguments.
@@ -51,53 +41,26 @@ fun format(name: String, port: Int): String {
  * Careful: after the rewrite there must be only ONE function
  * `connectionUrl`. The tests call it with one, two and three arguments.
  */
-fun connectionUrl(host: String): String {
-    return connectionUrl(host, 9000)
-}
+fun connectionUrl(host: String, port: Int = 9000, protocol: String = "tcp") = "$protocol://$host:$port"
 
-fun connectionUrl(host: String, port: Int): String {
-    return connectionUrl(host, port, "tcp")
-}
-
-fun connectionUrl(host: String, port: Int, protocol: String): String {
-    return protocol + "://" + host + ":" + port
-}
 
 /**
  * 3d - a chain of comparisons with && -> a range with `in`.
  */
-fun isWithinNormalBand(utilisation: Int): Boolean {
-    if (utilisation >= 10 && utilisation <= 90) {
-        return true
-    }
-    return false
-}
+fun isWithinNormalBand(utilisation: Int) = utilisation in 10..90
 
 /**
  * 3e - nested null checks -> safe call, takeIf and Elvis.
  */
 fun cleanName(input: String?): String {
-    if (input == null) {
-        return "unknown"
-    }
-    val trimmed = input.trim()
-    if (trimmed.length == 0) {
-        return "unknown"
-    }
-    return trimmed
+    return input?.trim()?.takeIf { it.isNotEmpty() } ?: "unknown"
 }
 
 /**
  * 3f - `var` with a later assignment -> `if` as an expression and `val`.
  */
 fun installationSize(channels: Int): String {
-    var description: String
-    if (channels > 8) {
-        description = "large installation"
-    } else {
-        description = "small installation"
-    }
-    return description
+    return "${(if (channels > 8) "large" else "small")} installation"
 }
 
 fun main() {

@@ -64,6 +64,10 @@ fun main() {
     // 1) toString() comes for free and is readable.
     println(camera)
 
+    val deviceId1 = DeviceId("device-1")
+    val deviceId2 = DeviceId("device-1")
+    println("equal: ${deviceId1 == deviceId2}") // true
+
     // 2) equals() compares values, not references.
     val same = Device(DeviceId("cam-04"), "Camera Studio B", DeviceType.CAMERA)
     println("equal: ${camera == same}")             // true

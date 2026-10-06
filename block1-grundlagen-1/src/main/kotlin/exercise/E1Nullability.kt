@@ -32,7 +32,7 @@ val sampleRawData: Map<String, String?> = mapOf(
  * Useful: String.toDoubleOrNull()
  */
 fun readTemperature(rawData: Map<String, String?>): Double? {
-    TODO("1a: read the temperature safely")
+    return rawData["temperature"]?.toDoubleOrNull()
 }
 
 /**
@@ -45,7 +45,8 @@ fun readTemperature(rawData: Map<String, String?>): Double? {
  * Useful: trim(), takeIf { ... }, the Elvis operator
  */
 fun readDeviceName(rawData: Map<String, String?>): String {
-    TODO("1b: read the name with a default value")
+    val stripped = rawData["name"]?.trim()
+    return stripped.takeIf { stripped?.isNotEmpty() ?: false } ?: "unknown device"
 }
 
 /**
@@ -56,7 +57,9 @@ fun readDeviceName(rawData: Map<String, String?>): String {
  * as well.
  */
 fun readPort(rawData: Map<String, String?>, default: Int = 9000): Int {
-    TODO("1c: read the port with a range check and a default")
+    val raw = rawData["port"]?.trim()
+    val rawInt = raw?.toIntOrNull()?.takeIf { it in 1..65535 }
+    return rawInt ?: default
 }
 
 /**
@@ -71,7 +74,8 @@ fun readPort(rawData: Map<String, String?>, default: Int = 9000): Int {
  * Use the three functions above.
  */
 fun describe(rawData: Map<String, String?>): String {
-    TODO("1d: assemble the description")
+    val temp = readTemperature(rawData)?.let { "$it °C" } ?: "no reading"
+    return "${readDeviceName(rawData)} (port ${readPort(rawData)}) - $temp"
 }
 
 fun main() {

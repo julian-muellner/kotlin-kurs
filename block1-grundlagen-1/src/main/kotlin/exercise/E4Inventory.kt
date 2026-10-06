@@ -50,7 +50,9 @@ class Inventory(private val devices: List<InventoryDevice>) {
      * Useful: count { ... }
      */
     val report: String by lazy {
-        TODO("4a: compute the report once")
+        val count = devices.size
+        val crit = devices.filter { it.utilisation >= 90 }.size
+        "Inventory: $count devices, $crit of them critical"
     }
 
     /**
@@ -61,7 +63,7 @@ class Inventory(private val devices: List<InventoryDevice>) {
      * Useful: firstOrNull { ... }
      */
     fun find(id: InventoryId): InventoryDevice? {
-        TODO("4b: look up a device")
+        return devices.firstOrNull { it.id == id }
     }
 
     /**
@@ -74,7 +76,7 @@ class Inventory(private val devices: List<InventoryDevice>) {
      * can be expressed in a single chain.
      */
     fun locationOf(id: InventoryId): String {
-        TODO("4c: return the location with a default")
+        return find(id)?.location ?: "unassigned"
     }
 
     /**
@@ -89,7 +91,14 @@ class Inventory(private val devices: List<InventoryDevice>) {
      *     90 and up      -> "critical"
      */
     fun state(id: InventoryId): String {
-        TODO("4d: rate the state")
+        val utilisation = find(id)?.utilisation ?: return "unknown"
+
+        return when {
+            utilisation < 10 -> "idle"
+            utilisation < 60 -> "normal"
+            utilisation < 90 -> "high"
+            else -> "critical"
+        }
     }
 
     /**
@@ -105,7 +114,11 @@ class Inventory(private val devices: List<InventoryDevice>) {
      * later, the compiler should complain right here.
      */
     fun department(deviceClass: DeviceClass): String {
-        TODO("4e: determine the department")
+        return when(deviceClass) {
+            DeviceClass.CAMERA, DeviceClass.INTERCOM -> "media technology"
+            DeviceClass.ROUTER -> "network"
+            DeviceClass.SENSOR -> "peripherals"
+        }
     }
 }
 

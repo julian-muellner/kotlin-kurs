@@ -23,7 +23,7 @@ package exercise
 @JvmInline
 value class SensorId(val value: String) {
     init {
-        TODO("2a: make sure the value is not blank")
+        require(value.isNotBlank())
     }
 
     override fun toString(): String = value
@@ -41,11 +41,11 @@ value class SensorId(val value: String) {
 @JvmInline
 value class Percent(val value: Int) {
     init {
-        TODO("2b: enforce the range 0..100")
+        require(value in 0..100)
     }
 
     val isCritical: Boolean
-        get() = TODO("2c: true from 90 percent upwards")
+        get() = (value >= 90)
 
     override fun toString(): String = "$value %"
 }
@@ -79,7 +79,7 @@ data class Reading(
      * Useful: the generated copy() function.
      */
     fun withUtilisation(newValue: Percent): Reading {
-        TODO("2d: return a new reading with a changed utilisation")
+        return this.copy(utilisation = newValue)
     }
 
     /**
@@ -94,7 +94,10 @@ data class Reading(
      *     cam-04: 95 % (source: device) [critical]
      */
     fun label(): String {
-        TODO("2e: assemble the label")
+        val str = "$sensor: $utilisation (source: $source)"
+        val retval = if (utilisation.isCritical) "$str [critical]" else str
+        return retval
+
     }
 }
 
