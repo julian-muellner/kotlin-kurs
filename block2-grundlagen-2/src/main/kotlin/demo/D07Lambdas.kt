@@ -29,6 +29,10 @@ fun countWhere(devices: List<Device>, predicate: (Device) -> Boolean): Int {
 fun thresholdCheck(limit: Int): (Device) -> Boolean =
     { device -> device.utilisation >= limit }
 
+fun printer(gen: () -> String): Unit {
+    println(gen())
+}
+
 /**
  * `inline` makes the compiler paste the body, lambda included, into the
  * call site. No function object is created at runtime - which is why the
@@ -42,6 +46,14 @@ inline fun withTiming(name: String, block: () -> Unit) {
 }
 
 fun main() {
+    var x = 5
+    val lamba = { x.toString() }
+    x++
+    printer(lamba)
+    println()
+    println()
+    println()
+
     val devices = sampleDevices
 
     // ---- notations, from verbose to idiomatic

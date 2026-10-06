@@ -34,7 +34,7 @@ abstract class Component(val id: String) {
      * `open` means: may be overridden. Without it the method is final.
      */
     open fun selfTest(): String {
-        TODO("1b: the default self test")
+        return "$id: ok"
     }
 
     /**
@@ -46,7 +46,7 @@ abstract class Component(val id: String) {
      * Useful: this::class.simpleName
      */
     override fun toString(): String {
-        TODO("1c: class name with id")
+        return "${this::class.simpleName}($id)"
     }
 }
 
@@ -66,10 +66,10 @@ interface Calibratable {
 class Camera(id: String, val resolution: String) : Component(id) {
 
     override val maintenanceIntervalMonths: Int
-        get() = TODO("1d: the camera's maintenance interval")
+        get() = 6
 
     override fun selfTest(): String {
-        TODO("1d: the camera's self test")
+        return "$id: video signal ok ($resolution)"
     }
 }
 
@@ -87,17 +87,18 @@ class Camera(id: String, val resolution: String) : Component(id) {
 class Sensor(id: String, val unit: String) : Component(id), Calibratable {
 
     override val maintenanceIntervalMonths: Int
-        get() = TODO("1e: the sensor's maintenance interval")
+        get() = 24
 
+    // interesting: we are replacing val with var
     override var offset: Double = 0.0
         private set
 
     override fun calibrate(value: Double) {
-        TODO("1e: carry the offset forward")
+        offset += value
     }
 
     override fun selfTest(): String {
-        TODO("1e: the sensor's self test")
+        return "$id: measuring in $unit, offset $offset"
     }
 }
 
@@ -112,7 +113,7 @@ class Sensor(id: String, val unit: String) : Component(id), Calibratable {
  * The lines are joined with "\n".
  */
 fun maintenanceOverview(components: List<Component>): String {
-    TODO("1f: produce the overview")
+    return components.joinToString("\n") { "$it - maintenance every ${it.maintenanceIntervalMonths} months" }
 }
 
 fun main() {

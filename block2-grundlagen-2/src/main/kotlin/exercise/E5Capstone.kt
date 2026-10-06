@@ -45,7 +45,10 @@ sealed interface AnalysisResult<out T> {
  * Useful: minOrNull(), maxOrNull(), the infix function `to`
  */
 fun <T : Comparable<T>> span(values: List<T>): AnalysisResult<Pair<T, T>> {
-    TODO("5a: determine the span")
+    if (values.isEmpty()) {
+        return AnalysisResult.NoData("empty list")
+    }
+    return AnalysisResult.Ok(Pair(values.min(), values.max()))
 }
 
 /**
@@ -59,7 +62,7 @@ fun <T : Comparable<T>> span(values: List<T>): AnalysisResult<Pair<T, T>> {
  * Useful: windowed(size), average()
  */
 fun List<Reading>.movingAverage(windowSize: Int): List<Double> {
-    TODO("5b: compute the moving average")
+    return map { it.value }.windowed(windowSize).map { it.average() }
 }
 
 /**
@@ -75,7 +78,7 @@ fun List<Reading>.movingAverage(windowSize: Int): List<Double> {
  * One test verifies this using an infinite sequence.
  */
 fun Sequence<Reading>.firstAnomalies(threshold: Double, count: Int): List<Reading> {
-    TODO("5c: take the first anomalies from the sequence")
+    return filter{ it.value > threshold }.take(count).toList()
 }
 
 /**
@@ -89,7 +92,10 @@ fun Sequence<Reading>.firstAnomalies(threshold: Double, count: Int): List<Readin
  * Write the `when` without an `else` branch.
  */
 fun reportLine(result: AnalysisResult<Pair<Double, Double>>): String {
-    TODO("5d: build the report line")
+    return when (result) {
+        is AnalysisResult.Ok -> "span: ${result.value.first} to ${result.value.second}"
+        is AnalysisResult.NoData ->  "no analysis possible (empty list)"
+    }
 }
 
 /**
@@ -107,7 +113,10 @@ fun reportLine(result: AnalysisResult<Pair<Double, Double>>): String {
 fun analysisPerDevice(
     readings: List<Reading>,
 ): Map<String, AnalysisResult<Pair<Double, Double>>> {
-    TODO("5e: analyse per device")
+    return readings
+        .groupBy { it.deviceId }
+        .mapValues { (_, list) -> list.map { it.value } }
+        .mapValues { (_, list) -> span(list) }
 }
 
 val sampleReadings = listOf(

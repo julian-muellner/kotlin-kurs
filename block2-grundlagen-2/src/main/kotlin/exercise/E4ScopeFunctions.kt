@@ -46,10 +46,7 @@ val sampleEntries = listOf(
  * a single chain.
  */
 fun message(entry: DeviceEntry?): String {
-    if (entry != null) {
-        return "${entry.name} is running at ${entry.utilisation} %"
-    }
-    return "device not found"
+    return entry?.run { "$name is running at $utilisation %" } ?: "device not found"
 }
 
 /**
@@ -59,12 +56,12 @@ fun message(entry: DeviceEntry?): String {
  * the four repetitions of its name are unnecessary.
  */
 fun standardConfiguration(target: String): DeviceConfiguration {
-    val configuration = DeviceConfiguration()
-    configuration.target = target
-    configuration.port = 9100
-    configuration.tls = true
-    configuration.timeoutSeconds = 5
-    return configuration
+    return DeviceConfiguration().apply {
+        this.target = target
+        port = 9100
+        tls = true
+        timeoutSeconds = 5
+    }
 }
 
 /**
@@ -73,10 +70,12 @@ fun standardConfiguration(target: String): DeviceConfiguration {
  * The same receiver in front of the dot, five times over.
  */
 fun profile(entry: DeviceEntry): String {
-    return "id: ${entry.id}\n" +
-        "name: ${entry.name}\n" +
-        "location: ${entry.location}\n" +
-        "utilisation: ${entry.utilisation} %"
+    return with(entry) {
+        "id: $id\n" +
+        "name: $name\n" +
+        "location: $location\n" +
+        "utilisation: $utilisation %"
+    }
 }
 
 /**
@@ -89,15 +88,12 @@ fun profile(entry: DeviceEntry): String {
  * the test checks them.
  */
 fun criticalNames(entries: List<DeviceEntry>, log: MutableList<String>): List<String> {
-    log.add("incoming: ${entries.size}")
-
-    val critical = entries.filter { it.utilisation >= 90 }
-    log.add("critical: ${critical.size}")
-
-    val names = critical.map { it.name }
-    log.add("names: ${names.size}")
-
-    return names
+    return entries
+        .also { log.add("incoming: ${it.size}") }
+        .filter { it.utilisation >= 90 }
+        .also { log.add("critical: ${it.size}")}
+        .map { it.name }
+        .also { log.add("names: ${it.size}") }
 }
 
 /**
@@ -106,11 +102,13 @@ fun criticalNames(entries: List<DeviceEntry>, log: MutableList<String>): List<St
  * A computation on an object whose result is returned.
  */
 fun rating(entry: DeviceEntry): String {
-    val level = when {
-        entry.utilisation < 10 -> "idle"
-        entry.utilisation < 60 -> "normal"
-        entry.utilisation < 90 -> "high"
-        else -> "critical"
+    val level = entry.run {
+        when {
+            utilisation < 10 -> "idle"
+            utilisation < 60 -> "normal"
+            utilisation < 90 -> "high"
+            else -> "critical"
+        }
     }
     return "${entry.id} is $level"
 }

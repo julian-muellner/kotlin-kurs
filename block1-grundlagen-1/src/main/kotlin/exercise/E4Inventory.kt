@@ -51,7 +51,7 @@ class Inventory(private val devices: List<InventoryDevice>) {
      */
     val report: String by lazy {
         val count = devices.size
-        val crit = devices.filter { it.utilisation >= 90 }.size
+        val crit = devices.count { it.utilisation >= 90 }
         "Inventory: $count devices, $crit of them critical"
     }
 

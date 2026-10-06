@@ -1,5 +1,7 @@
 package exercise
 
+import javax.management.Query
+
 /**
  * Exercise 2 - sealed classes: modelling states.
  *
@@ -50,7 +52,12 @@ sealed interface QueryState {
  * the compiler should complain right here.
  */
 fun displayText(state: QueryState): String {
-    TODO("2a: display text via an exhaustive when")
+    return when (state) {
+        is QueryState.Failure -> "error: no network"
+        QueryState.Loading -> "query running …"
+        is QueryState.Success -> "${state.measurements.count().takeIf { it > 0 } ?: "no"} measurements received"
+        is QueryState.TimedOut -> "timed out after ${state.afterSeconds} s"
+    }
 }
 
 /**
@@ -61,7 +68,10 @@ fun displayText(state: QueryState): String {
  * Useful: `when` with `is`, or a single `if (… is …)`.
  */
 fun measurementsOrNull(state: QueryState): List<Measurement>? {
-    TODO("2b: extract the measurements")
+    return when (state) {
+        is QueryState.Success -> state.measurements
+        else -> null
+    }
 }
 
 /**
@@ -71,7 +81,7 @@ fun measurementsOrNull(state: QueryState): List<Measurement>? {
  * which nothing else happens.
  */
 fun isFinal(state: QueryState): Boolean {
-    TODO("2c: recognise a final state")
+    return state != QueryState.Loading
 }
 
 /**
@@ -88,7 +98,11 @@ fun isFinal(state: QueryState): Boolean {
  * can access the variant's fields directly.
  */
 fun isWorthRetrying(state: QueryState): Boolean {
-    TODO("2d: decide about a retry")
+    return when (state) {
+        is QueryState.Failure -> state.message.contains("temporary")
+        QueryState.Loading, is QueryState.Success -> false
+        is QueryState.TimedOut -> (state.afterSeconds < 60)
+    }
 }
 
 fun main() {

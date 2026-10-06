@@ -74,6 +74,7 @@ fun main() {
         restart(device)
     }
 
+
     // Outside the block:
     //     restart(device)
     // is a compile error, because no AuditLog is in context.

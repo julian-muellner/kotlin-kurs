@@ -35,7 +35,9 @@ val sampleTelemetry: List<Measurement> = listOf(
  * Useful: groupBy, mapValues, average()
  */
 fun averagePerDevice(measurements: List<Measurement>): Map<String, Double> {
-    TODO("3a: average per device")
+    return measurements
+        .groupBy { it.deviceId }
+        .mapValues { (_, list) -> list.map { it.value }.average() }
 }
 
 /**
@@ -46,7 +48,9 @@ fun averagePerDevice(measurements: List<Measurement>): Map<String, Double> {
  * Useful: groupBy, mapValues, maxOf
  */
 fun peakPerDevice(measurements: List<Measurement>): Map<String, Double> {
-    TODO("3b: peak per device")
+    return measurements
+        .groupBy { it.deviceId }
+        .mapValues { (_, list) -> list.maxOf { it.value } }
 }
 
 /**
@@ -55,7 +59,7 @@ fun peakPerDevice(measurements: List<Measurement>): Map<String, Double> {
  * All measurements above the given limit, in the order they arrived.
  */
 fun outliers(measurements: List<Measurement>, limit: Double): List<Measurement> {
-    TODO("3c: filter the outliers")
+    return measurements.filter { it.value > limit }
 }
 
 /**
@@ -67,7 +71,11 @@ fun outliers(measurements: List<Measurement>, limit: Double): List<Measurement> 
  * Useful: the result of 3a, sortedByDescending, take, keys/toList
  */
 fun topDevices(measurements: List<Measurement>, count: Int): List<String> {
-    TODO("3d: determine the top devices")
+    return averagePerDevice(measurements)
+        .toList()
+        .sortedBy { -it.second }
+        .map { it.first }
+        .take(count)
 }
 
 /**
@@ -79,7 +87,7 @@ fun topDevices(measurements: List<Measurement>, count: Int): List<String> {
  * a getter.
  */
 val Measurement.isNotable: Boolean
-    get() = TODO("3e: determine whether it is notable")
+    get() = (value >= 70.0)
 
 /**
  * Exercise 3f
@@ -96,7 +104,10 @@ val Measurement.isNotable: Boolean
  * Useful: size, distinctBy or map+distinct, count, isNotable from 3e
  */
 fun List<Measurement>.summarise(): String {
-    TODO("3f: produce the summary")
+    return when(size) {
+        0 -> "no measurements"
+        else -> "$size measurements from ${distinctBy { it.deviceId }.size} devices, ${count { it.isNotable }} notable"
+    }
 }
 
 fun main() {
