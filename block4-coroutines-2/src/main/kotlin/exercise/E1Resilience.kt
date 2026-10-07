@@ -1,6 +1,16 @@
 package exercise
 
+import demo.Device
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -65,7 +75,16 @@ suspend fun readStatusWithRetry(
     maxAttempts: Int = 3,
     backoffMillis: Long = 100,
 ): String {
-    TODO("1a: retry with exponential backoff")
+    var waitTime = backoffMillis
+    repeat(maxAttempts - 1) {
+        try {
+            return client.readStatus(deviceId)
+        } catch (e: DeviceUnreachableException) {
+            delay(waitTime.milliseconds)
+            waitTime *= 2
+        }
+    }
+    return client.readStatus(deviceId)
 }
 
 /**
@@ -85,7 +104,13 @@ suspend fun readStatusOrNull(
     backoffMillis: Long = 100,
     timeoutMillis: Long = 1_000,
 ): String? {
-    TODO("1b: bound the whole retry sequence by a timeout")
+    return try {
+        withTimeoutOrNull(timeoutMillis.milliseconds) {
+            readStatusWithRetry(client, deviceId, maxAttempts, backoffMillis)
+        }
+    } catch (e: DeviceUnreachableException) {
+        null
+    }
 }
 
 /**
@@ -108,7 +133,11 @@ suspend fun readAllStatuses(
     maxAttempts: Int = 3,
     backoffMillis: Long = 100,
 ): Map<String, String?> {
-    TODO("1c: read all statuses, tolerating individual failures")
+    return supervisorScope {
+        clients
+            .mapValues { (id, client) -> async { readStatusWithRetry(client, id, maxAttempts, backoffMillis) } }
+            .mapValues { (_, job) -> try { job.await() } catch (e: DeviceUnreachableException) { null } }
+    }
 }
 
 /**
@@ -123,5 +152,15 @@ suspend fun readAllStatuses(
  * Useful: try/finally, NonCancellable, withContext
  */
 suspend fun pollUntilCancelled(log: MutableList<String>, intervalMillis: Long = 100) {
-    TODO("1d: poll, and close down cleanly on cancellation")
+    try {
+        while (true) {
+            delay(intervalMillis.milliseconds)
+            log += "poll"
+        }
+    } finally {
+        withContext(NonCancellable) {
+            delay(intervalMillis.milliseconds)
+            log.addLast("closed")
+        }
+    }
 }

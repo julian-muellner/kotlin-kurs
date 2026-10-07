@@ -49,11 +49,8 @@ fun checksumBlocking(input: String): Int {
  * Useful: withContext(...)
  */
 suspend fun readConfiguration(deviceId: String): String {
-    return coroutineScope {
-        val job = async(Dispatchers.IO) {
-            readConfigurationBlocking(deviceId)
-        }
-        job.await()
+    return withContext(Dispatchers.IO) {
+        readConfigurationBlocking(deviceId)
     }
 }
 
@@ -67,8 +64,9 @@ suspend fun readConfiguration(deviceId: String): String {
  */
 suspend fun readConfigurations(deviceIds: List<String>): List<String> {
     return coroutineScope {
-        val jobs = deviceIds.map { async { readConfiguration(it) } }
-        jobs.awaitAll()
+        deviceIds
+            .map { async { readConfiguration(it) } }
+            .awaitAll()
     }
 }
 

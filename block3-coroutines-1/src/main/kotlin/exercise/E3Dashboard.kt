@@ -91,19 +91,18 @@ suspend fun deviceSnapshot(
     deviceId: String,
     temperatureTimeoutMillis: Long = 500,
 ): DeviceSnapshot {
-    val (status, util, temp) = coroutineScope {
+    return coroutineScope {
         val status = async {fetchDeviceStatus(deviceId)}
         val utilisation = async {fetchDeviceUtilisation(deviceId)}
-        val temperature = async {withTimeoutOrNull(temperatureTimeoutMillis.milliseconds) {fetchDeviceTemperature(deviceId)}}
 
-        Triple(status.await(), utilisation.await(), temperature.await())
+        // no need for async, as we would .await() in the next line anyway; might as well suspend right now
+        val temperature = withTimeoutOrNull(temperatureTimeoutMillis.milliseconds) {fetchDeviceTemperature(deviceId)}
+
+        when(temperature) {
+            null -> DeviceSnapshot.Partial(deviceId, status.await(), utilisation.await())
+            else -> DeviceSnapshot.Complete(deviceId, status.await(), utilisation.await(), temperature)
+        }
     }
-
-    return when(temp) {
-        null -> DeviceSnapshot.Partial(deviceId, status, util)
-        else -> DeviceSnapshot.Complete(deviceId, status, util, temp)
-    }
-
 }
 
 /**
