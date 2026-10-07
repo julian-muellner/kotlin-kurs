@@ -1,6 +1,10 @@
 package exercise
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -87,7 +91,19 @@ suspend fun deviceSnapshot(
     deviceId: String,
     temperatureTimeoutMillis: Long = 500,
 ): DeviceSnapshot {
-    TODO("3a: collect one snapshot with a timeout on the temperature")
+    val (status, util, temp) = coroutineScope {
+        val status = async {fetchDeviceStatus(deviceId)}
+        val utilisation = async {fetchDeviceUtilisation(deviceId)}
+        val temperature = async {withTimeoutOrNull(temperatureTimeoutMillis.milliseconds) {fetchDeviceTemperature(deviceId)}}
+
+        Triple(status.await(), utilisation.await(), temperature.await())
+    }
+
+    return when(temp) {
+        null -> DeviceSnapshot.Partial(deviceId, status, util)
+        else -> DeviceSnapshot.Complete(deviceId, status, util, temp)
+    }
+
 }
 
 /**
@@ -100,7 +116,11 @@ suspend fun dashboard(
     deviceIds: List<String>,
     temperatureTimeoutMillis: Long = 500,
 ): List<DeviceSnapshot> {
-    TODO("3b: collect all snapshots concurrently")
+    return coroutineScope {
+        deviceIds
+            .map { async { deviceSnapshot(it, temperatureTimeoutMillis) } }
+            .awaitAll()
+    }
 }
 
 /**
@@ -112,7 +132,10 @@ suspend fun dashboard(
  *     "slow-01: online, 49 %, temperature unavailable"
  */
 fun renderLine(snapshot: DeviceSnapshot): String {
-    TODO("3c: render a snapshot as one line")
+    return when(snapshot) {
+        is DeviceSnapshot.Complete -> "${snapshot.deviceId}: ${snapshot.status}, ${snapshot.utilisation} %, ${snapshot.temperature} °C"
+        is DeviceSnapshot.Partial -> "${snapshot.deviceId}: ${snapshot.status}, ${snapshot.utilisation} %, temperature unavailable"
+    }
 }
 
 /**
@@ -122,5 +145,7 @@ fun renderLine(snapshot: DeviceSnapshot): String {
  * on the dashboard.
  */
 fun countIncomplete(snapshots: List<DeviceSnapshot>): Int {
-    TODO("3d: count the partial snapshots")
+    return snapshots.count {
+        it is DeviceSnapshot.Partial
+    }
 }

@@ -1,5 +1,12 @@
 package exercise
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
+
 /**
  * Exercise 2 - dispatchers: keeping blocking work off the thread of the caller.
  *
@@ -42,7 +49,12 @@ fun checksumBlocking(input: String): Int {
  * Useful: withContext(...)
  */
 suspend fun readConfiguration(deviceId: String): String {
-    TODO("2a: move the blocking read to a suitable dispatcher")
+    return coroutineScope {
+        val job = async(Dispatchers.IO) {
+            readConfigurationBlocking(deviceId)
+        }
+        job.await()
+    }
 }
 
 /**
@@ -54,7 +66,10 @@ suspend fun readConfiguration(deviceId: String): String {
  * Twelve devices at 150 ms each must not take 1.8 seconds.
  */
 suspend fun readConfigurations(deviceIds: List<String>): List<String> {
-    TODO("2b: read all configurations concurrently")
+    return coroutineScope {
+        val jobs = deviceIds.map { async { readConfiguration(it) } }
+        jobs.awaitAll()
+    }
 }
 
 /**
@@ -76,5 +91,7 @@ suspend fun readConfigurations(deviceIds: List<String>): List<String> {
  * Putting blocking I/O on Default starves everything else.
  */
 suspend fun checksum(input: String): Int {
-    TODO("2c: move the CPU-bound work to a suitable dispatcher")
+    return withContext(Dispatchers.Default) {
+        checksumBlocking(input)
+    }
 }

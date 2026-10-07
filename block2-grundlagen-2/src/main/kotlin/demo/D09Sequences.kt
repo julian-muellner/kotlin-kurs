@@ -123,7 +123,7 @@ private fun measuring() {
     val small = (1..20).toList()
     val (_, smallList) = measure { small.map { it * 2 }.filter { it % 3 == 0 } }
     val (_, smallSequence) = measure { small.asSequence().map { it * 2 }.filter { it % 3 == 0 }.toList() }
-    println("small, fully consumed - list: $smallList ms, sequence: $smallSequence ms")
+    println("small, fully consumed - list: -$smallList ms, sequence: $smallSequence ms")
 }
 
 private inline fun <T> measure(block: () -> T): Pair<T, Double> {

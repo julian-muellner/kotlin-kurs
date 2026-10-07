@@ -1,5 +1,8 @@
 package exercise
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -50,7 +53,12 @@ suspend fun collectStatusesSequentially(deviceIds: List<String>): List<String> =
  * Useful: coroutineScope { }, async { }, awaitAll()
  */
 suspend fun collectStatusesInParallel(deviceIds: List<String>): List<String> {
-    TODO("1a: run the requests concurrently")
+    // note: a builder (as used here) always wait until all jobs in the scope have finished
+    return coroutineScope {
+        deviceIds
+            .map { async { fetchStatus(it) } }
+            .awaitAll()
+    }
 }
 
 /**
@@ -68,7 +76,12 @@ suspend fun collectStatusesInParallel(deviceIds: List<String>): List<String> {
  * started BEFORE the first `await()`.
  */
 suspend fun deviceSummary(deviceId: String): String {
-    TODO("1b: fetch status and utilisation concurrently")
+    return coroutineScope {
+        val utilJob = async { fetchDeviceUtilisation(deviceId) }
+        val statusJob = async { fetchDeviceStatus(deviceId) }
+
+        "$deviceId: ${statusJob.await()}, utilisation ${utilJob.await()}"
+    }
 }
 
 /**
@@ -80,5 +93,9 @@ suspend fun deviceSummary(deviceId: String): String {
  * Reuse [deviceSummary].
  */
 suspend fun allSummaries(deviceIds: List<String>): List<String> {
-    TODO("1c: build all summaries concurrently")
+    return coroutineScope {
+        deviceIds
+            .map { async { deviceSummary(it) } }
+            .awaitAll()
+    }
 }
